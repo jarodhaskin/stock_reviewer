@@ -1,0 +1,30 @@
+# Local development instructions and environment
+AGENTS.md
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+.agents/
+# Generated market data and reports
+master_stock_history.*
+stock_screen_*.csv
+stock_screen_*.xlsx
+stock_screen_*.html
+outputs/*
+!outputs/.gitkeep
+# Python, tools, builds, and OS files
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+.DS_Store
+Thumbs.db
