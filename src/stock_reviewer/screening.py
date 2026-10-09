@@ -4,7 +4,7 @@ from typing import Any
 
 import pandas as pd
 
-from stock_reviewer.config import MARKET_TICKER
+from stock_reviewer.config import MARKET_TICKER, TREASURY_TICKER
 from stock_reviewer.criteria import CRITERION_FUNCTIONS
 from stock_reviewer.providers import (
     bulk_download,
@@ -21,6 +21,11 @@ def screen_stocks(
     raw_data = bulk_download(tickers, criteria)
 
     market_df = extract_ticker_frame(raw_data, MARKET_TICKER)
+    treasury_df = extract_ticker_frame(raw_data, TREASURY_TICKER)
+    treasury_close = (
+        treasury_df["Close"].dropna() if treasury_df is not None else pd.Series(dtype=float)
+    )
+    treasury_10y_yield_pct = float(treasury_close.iloc[-1]) if not treasury_close.empty else None
 
     criteria = criteria.copy()
     criteria["market_df"] = market_df
@@ -28,7 +33,7 @@ def screen_stocks(
     for ticker in tickers:
         ticker = ticker.upper().strip()
 
-        if ticker == MARKET_TICKER:
+        if ticker in (MARKET_TICKER, TREASURY_TICKER):
             continue
 
         failed_reasons = []
@@ -41,6 +46,8 @@ def screen_stocks(
             results.append(
                 {
                     "ticker": ticker,
+                    "treasury_10y_yield_pct": treasury_10y_yield_pct,
+                    "risk_premium_pct": None,
                     "status": "failed",
                     "failed_reason": "ticker not pulled (no data in bulk download)",
                 }
@@ -55,6 +62,13 @@ def screen_stocks(
                 failed_reasons.append(reason)
 
         metrics.update(download_financial_metrics(ticker))
+        metrics["treasury_10y_yield_pct"] = treasury_10y_yield_pct
+        owner_earnings_yield_pct = metrics.get("owner_earnings_yield_pct")
+        metrics["risk_premium_pct"] = (
+            owner_earnings_yield_pct - treasury_10y_yield_pct
+            if owner_earnings_yield_pct is not None and treasury_10y_yield_pct is not None
+            else None
+        )
 
         status = "ok" if not failed_reasons else "failed"
 

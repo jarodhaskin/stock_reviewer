@@ -67,6 +67,9 @@ options, external configuration files, or environment-variable settings.
 - `DEV_MODE=True` selects AAPL, MSFT, NVDA, PLTR, and SOFI.
 - `MARKET_TICKER` is SPY. The main block adds it to the download list if absent,
   and the engine excludes it from screened results.
+- Yahoo Finance's `^TNX` 10-year Treasury note index is added to the same bulk
+  download and excluded from screened stocks. Its latest Yahoo close is included
+  as `treasury_10y_yield_pct` in each stock's results and history.
 - `CRITERIA` holds thresholds; `ACTIVE_CRITERIA` lists the active check functions.
   The explicit registry in `criteria.py` maps active names to check functions.
 
@@ -89,13 +92,22 @@ in the downloaded period, not an intraday high. Both liquidity thresholds are
 retained, although the higher entry threshold makes the exit threshold redundant
 at the defaults.
 
-For each stock with price data, the run also pulls the latest available annual
-net income, depreciation and amortization, and capital expenditure from Yahoo
-Finance financial statements. These values appear in the HTML results and CSV
-history; their statement periods are included separately. They are informational
-and do not affect screening or result order. Yahoo may omit individual values,
-and capital expenditure keeps Yahoo's reported sign. This adds income statement
-and cash flow requests for each stock and can increase run time.
+For each stock with price data, the run also pulls current market capitalization
+and the latest available annual net income, depreciation and amortization, and
+capital expenditure from Yahoo Finance. It calculates owner earnings as net
+income plus depreciation and amortization minus the absolute value of capex,
+so capex reduces the result regardless of Yahoo's sign convention. Owner earnings
+yield is owner earnings divided by market capitalization, multiplied by 100.
+Risk premium is owner earnings yield minus the 10-year Treasury yield, in
+percentage points. These values appear in the HTML results and CSV history;
+statement periods are included separately. They are informational and do not
+affect screening or result order. Yahoo may omit individual values. The Treasury
+yield is blank if its quote is missing, owner earnings is blank unless all three
+input values are available, owner earnings yield is blank if market cap is
+missing or zero, and risk premium is blank if either yield is missing. Market
+capitalization is a current snapshot. Pulling these metrics adds company
+information, income statement, and cash flow requests per stock and can increase
+run time.
 
 Passing results omit `failed_reason` and sort descending by available metrics in
 insertion order: average dollar volume, average price, moving average, drawdown,

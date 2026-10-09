@@ -29,6 +29,13 @@ def download_financial_metrics(ticker: str) -> dict[str, Any]:
     company = yf.Ticker(ticker)
     income_stmt = company.get_income_stmt(freq="yearly", pretty=True)
     cash_flow = company.get_cash_flow(freq="yearly", pretty=True)
+    info = company.get_info()
+    market_cap_value = info.get("marketCap")
+    market_cap = (
+        float(market_cap_value)
+        if market_cap_value is not None and pd.notna(market_cap_value)
+        else None
+    )
 
     def latest_value(statement: pd.DataFrame, row_name: str) -> tuple[Any, Any]:
         if row_name not in statement.index or statement.empty:
@@ -43,11 +50,24 @@ def download_financial_metrics(ticker: str) -> dict[str, Any]:
     net_income, income_period = latest_value(income_stmt, "Net Income")
     depreciation, cash_flow_period = latest_value(cash_flow, "Depreciation And Amortization")
     capex, _ = latest_value(cash_flow, "Capital Expenditure")
+    owner_earnings = (
+        net_income + depreciation - abs(capex)
+        if net_income is not None and depreciation is not None and capex is not None
+        else None
+    )
+    owner_earnings_yield_pct = (
+        owner_earnings / market_cap * 100
+        if owner_earnings is not None and market_cap not in (None, 0)
+        else None
+    )
     return {
+        "market_cap": market_cap,
         "net_income": net_income,
         "net_income_period": str(income_period.date()) if income_period is not None else None,
         "depreciation_and_amortization": depreciation,
         "capital_expenditure": capex,
+        "owner_earnings": owner_earnings,
+        "owner_earnings_yield_pct": owner_earnings_yield_pct,
         "cash_flow_period": (
             str(cash_flow_period.date()) if cash_flow_period is not None else None
         ),

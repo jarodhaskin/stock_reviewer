@@ -17,7 +17,11 @@ def test_main_workflow(monkeypatch):
         cli, "write_stock_screen_output", lambda *args: events.append(("report", args))
     )
     cli.main()
-    assert events[0] == ("screen", config.DEV_TICKERS + ["SPY"], config.CRITERIA)
+    assert events[0] == (
+        "screen",
+        config.DEV_TICKERS + ["SPY", "^TNX"],
+        config.CRITERIA,
+    )
     assert [event[0] for event in events] == ["screen", "history", "report"]
     assert events[1][1][0] == "all"
     assert events[2][1][:3] == ("passed", "all", config.CRITERIA)
