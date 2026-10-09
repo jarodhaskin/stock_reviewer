@@ -25,6 +25,7 @@ def test_formulas_and_combined_result(monkeypatch, passing_data):
         return raw
 
     monkeypatch.setattr(screening, "bulk_download", download)
+    monkeypatch.setattr(screening, "download_financial_metrics", lambda ticker: {})
     passed, all_results = screening.screen_stocks(["A", "B", "MISSING", "SPY"], config.CRITERIA)
     assert requests == [["A", "B", "MISSING", "SPY"]]
     assert list(passed.ticker) == ["B", "A"]
@@ -45,6 +46,7 @@ def test_all_failures_collected(monkeypatch):
     monkeypatch.setattr(
         screening, "bulk_download", lambda *args: pd.concat({"A": prices([1, 1], 1)}, axis=1)
     )
+    monkeypatch.setattr(screening, "download_financial_metrics", lambda ticker: {})
     passed, results = screening.screen_stocks(["A"], config.CRITERIA)
     assert passed.empty
     assert results.iloc[0].failed_reason == (
@@ -114,6 +116,7 @@ def test_relative_dates_and_boundary():
 
 
 def test_universe_and_registry():
-    assert len(config.NASDAQ_100_TICKERS) == 78
+    assert len(config.NASDAQ_100_TICKERS) == 77
+    assert "ANSS" not in config.NASDAQ_100_TICKERS
     assert config.DEV_TICKERS == ["AAPL", "MSFT", "NVDA", "PLTR", "SOFI"]
     assert [check.__name__ for check in criteria.CRITERION_FUNCTIONS] == config.ACTIVE_CRITERIA

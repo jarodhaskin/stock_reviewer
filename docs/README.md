@@ -38,6 +38,9 @@ python3 -m venv .venv
 .venv/bin/stock-reviewer
 ```
 
+On macOS or Linux, after installing the project, you can also run it with
+`make run`; run the default test suite with `make test`.
+
 On Windows:
 
 ```powershell
@@ -58,7 +61,7 @@ directory for predictable paths.
 Settings are edited in `src/stock_reviewer/config.py`; there are no command-line
 options, external configuration files, or environment-variable settings.
 
-- `DEV_MODE=False` selects the hardcoded 78-symbol `NASDAQ_100_TICKERS` list.
+- `DEV_MODE=False` selects the hardcoded 77-symbol `NASDAQ_100_TICKERS` list.
   Despite its name, this is a legacy universe, not verified current index membership.
 - `DEV_MODE=True` selects AAPL, MSFT, NVDA, PLTR, and SOFI.
 - `MARKET_TICKER` is SPY. The main block adds it to the download list if absent,
@@ -85,6 +88,14 @@ in the downloaded period, not an intraday high. Both liquidity thresholds are
 retained, although the higher entry threshold makes the exit threshold redundant
 at the defaults.
 
+For each stock with price data, the run also pulls the latest available annual
+net income, depreciation and amortization, and capital expenditure from Yahoo
+Finance financial statements. These values appear in the HTML results and CSV
+history; their statement periods are included separately. They are informational
+and do not affect screening or result order. Yahoo may omit individual values,
+and capital expenditure keeps Yahoo's reported sign. This adds income statement
+and cash flow requests for each stock and can increase run time.
+
 Passing results omit `failed_reason` and sort descending by available metrics in
 insertion order: average dollar volume, average price, moving average, drawdown,
 stock return, market return, relative return. This is a multi-column sort, not
@@ -92,12 +103,12 @@ an investment score. If no metric columns exist, ticker sorts ascending.
 
 ## Reports and history
 
-Each run creates `stock_screen_YYYY-MM-DD_HH-MM-SS.html` with four complete tables:
+Each run writes `outputs/stock_screen.html` with four complete tables:
 passed stocks, all results and failure reasons, criteria, and run information.
 Run information records the host's local timestamp, development mode, and
 screened universe size. The report embeds its CSS and needs no external assets.
-It escapes HTML values and retains floating-point metric precision. A filename
-collision raises an error rather than overwriting an existing HTML report.
+It escapes HTML values and retains floating-point metric precision. Each run
+replaces this same HTML file so an open preview can be refreshed after a run.
 
 Open the report in a browser or use Microsoft's Live Preview extension in
 VS Code to show the rendered HTML. Reports can be copied between computers.

@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 from html.parser import HTMLParser
 
 import pandas as pd
-import pytest
-
 from stock_reviewer import config, reports
 
 
@@ -49,7 +47,7 @@ def test_html_complete_and_history_append(tmp_path, monkeypatch):
     )
     passed = results.iloc[:1].drop(columns="failed_reason")
     reports.write_stock_screen_output(passed, results, config.CRITERIA, timestamp, True)
-    path = tmp_path / "outputs" / "stock_screen_2026-01-02_03-04-05.html"
+    path = tmp_path / "outputs" / "stock_screen.html"
     text = path.read_text()
     assert "<script>" not in text
     reader = TableReader()
@@ -76,9 +74,12 @@ def test_html_complete_and_history_append(tmp_path, monkeypatch):
     assert (
         history.run_datetime.tolist() == ["2026-01-02 03:04:05"] * 2 + ["2026-01-02 03:04:06"] * 2
     )
-    with pytest.raises(FileExistsError):
-        reports.write_stock_screen_output(passed, results, config.CRITERIA, timestamp, True)
-    assert path.read_text() == text
+    reports.write_stock_screen_output(
+        passed, results, config.CRITERIA, timestamp + timedelta(seconds=1), True
+    )
+    updated_text = path.read_text()
+    assert updated_text != text
+    assert "2026-01-02 03:04:06" in updated_text
 
 
 def test_empty_passed_report(tmp_path, monkeypatch):
@@ -86,5 +87,5 @@ def test_empty_passed_report(tmp_path, monkeypatch):
     frame = pd.DataFrame(columns=["ticker", "status"])
     reports.write_stock_screen_output(frame, frame, config.CRITERIA, datetime(2026, 1, 1), False)
     reader = TableReader()
-    reader.feed((tmp_path / "outputs" / "stock_screen_2026-01-01_00-00-00.html").read_text())
+    reader.feed((tmp_path / "outputs" / "stock_screen.html").read_text())
     assert reader.tables["passed"] == [["ticker", "status"]]

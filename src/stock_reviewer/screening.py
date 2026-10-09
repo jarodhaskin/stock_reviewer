@@ -6,7 +6,11 @@ import pandas as pd
 
 from stock_reviewer.config import MARKET_TICKER
 from stock_reviewer.criteria import CRITERION_FUNCTIONS
-from stock_reviewer.providers import bulk_download, extract_ticker_frame
+from stock_reviewer.providers import (
+    bulk_download,
+    download_financial_metrics,
+    extract_ticker_frame,
+)
 
 
 def screen_stocks(
@@ -50,6 +54,8 @@ def screen_stocks(
             if not check_passed and reason:
                 failed_reasons.append(reason)
 
+        metrics.update(download_financial_metrics(ticker))
+
         status = "ok" if not failed_reasons else "failed"
 
         results.append(
@@ -64,7 +70,19 @@ def screen_stocks(
     all_results = pd.DataFrame(results)
 
     # Sort PASSED by whatever metric columns exist (if any)
-    metric_cols = [c for c in all_results.columns if c not in ("ticker", "status", "failed_reason")]
+    metric_cols = [
+        column
+        for column in (
+            "avg_dollar_volume",
+            "avg_price",
+            "ma_200",
+            "drawdown_pct",
+            "stock_return_pct",
+            "market_return_pct",
+            "rel_return_pct",
+        )
+        if column in all_results.columns
+    ]
     passed = (
         all_results[all_results["status"] == "ok"]
         .drop(columns=["failed_reason"])

@@ -16,11 +16,44 @@ def bulk_download(tickers: list[str], criteria: dict[str, Any]) -> pd.DataFrame:
         tickers_str,
         period=f"{criteria['lookback_days']}d",
         interval="1d",
+        auto_adjust=True,
         group_by="ticker",
         progress=False,
         threads=True,
     )
     return raw
+
+
+def download_financial_metrics(ticker: str) -> dict[str, Any]:
+    """Return the latest annual net income, D&A, and capital expenditure."""
+    company = yf.Ticker(ticker)
+    income_stmt = company.get_income_stmt(freq="yearly", pretty=True)
+    cash_flow = company.get_cash_flow(freq="yearly", pretty=True)
+
+    def latest_value(statement: pd.DataFrame, row_name: str) -> tuple[Any, Any]:
+        if row_name not in statement.index or statement.empty:
+            return None, None
+        periods = sorted(statement.columns, reverse=True)
+        for period in periods:
+            value = statement.at[row_name, period]
+            if pd.notna(value):
+                return float(value), period
+        return None, None
+
+    net_income, income_period = latest_value(income_stmt, "Net Income")
+    depreciation, cash_flow_period = latest_value(
+        cash_flow, "Depreciation And Amortization"
+    )
+    capex, _ = latest_value(cash_flow, "Capital Expenditure")
+    return {
+        "net_income": net_income,
+        "net_income_period": str(income_period.date()) if income_period is not None else None,
+        "depreciation_and_amortization": depreciation,
+        "capital_expenditure": capex,
+        "cash_flow_period": (
+            str(cash_flow_period.date()) if cash_flow_period is not None else None
+        ),
+    }
 
 
 def extract_ticker_frame(raw: pd.DataFrame, ticker: str) -> Optional[pd.DataFrame]:

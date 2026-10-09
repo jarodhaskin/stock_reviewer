@@ -41,8 +41,6 @@ def write_stock_screen_output(
     dev_mode: bool,
 ) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    output_prefix = f"stock_screen_{run_timestamp:%Y-%m-%d_%H-%M-%S}"
-
     criteria_df = pd.DataFrame([{"criteria": k, "value": v} for k, v in criteria.items()])
 
     run_info_df = pd.DataFrame(
@@ -109,7 +107,7 @@ td {{ white-space: nowrap; }}
 </body>
 </html>
 """
-    output_file = OUTPUT_DIR / f"{output_prefix}.html"
-    with output_file.open("x", encoding="utf-8") as output:
+    output_file = OUTPUT_DIR / "stock_screen.html"
+    with output_file.open("w", encoding="utf-8") as output:
         output.write(report)
     print(f"Results written to {output_file}")

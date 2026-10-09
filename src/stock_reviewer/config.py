@@ -67,7 +67,6 @@ NASDAQ_100_TICKERS = [
     "CTSH",
     "WBD",
     "FANG",
-    "ANSS",
     "CEG",
     "GEHC",
     "FTNT",
