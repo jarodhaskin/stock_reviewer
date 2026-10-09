@@ -39,7 +39,8 @@ python3 -m venv .venv
 ```
 
 On macOS or Linux, after installing the project, you can also run it with
-`make run`; run the default test suite with `make test`.
+`make run`; run the default test suite with `make test`, or run all local CI
+checks with `make premerge_test` before opening a pull request.
 
 On Windows:
 
