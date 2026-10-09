@@ -1,4 +1,4 @@
-.PHONY: run test premerge_test
+.PHONY: run test
 
 run:
 	.venv/bin/stock-reviewer
