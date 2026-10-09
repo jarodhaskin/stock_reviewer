@@ -41,9 +41,7 @@ def download_financial_metrics(ticker: str) -> dict[str, Any]:
         return None, None
 
     net_income, income_period = latest_value(income_stmt, "Net Income")
-    depreciation, cash_flow_period = latest_value(
-        cash_flow, "Depreciation And Amortization"
-    )
+    depreciation, cash_flow_period = latest_value(cash_flow, "Depreciation And Amortization")
     capex, _ = latest_value(cash_flow, "Capital Expenditure")
     return {
         "net_income": net_income,
